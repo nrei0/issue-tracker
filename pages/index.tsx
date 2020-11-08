@@ -38,7 +38,11 @@ const MainPage: React.FC = () => {
   const issues: Issue[] = data?.search?.nodes || []
 
   const onSearchChange = (text: string, state: IssueState): void => {
-    const query = `repo:facebook/react is:issue in:title in:body state:${state} ${text}`
+    // Escape characters.
+    // https://docs.github.com/en/free-pro-team@latest/github/searching-for-information-on-github/searching-code#considerations-for-code-search
+    // . , : ; / \ ` ' " = * ! ? # $ & + ^ | ~ < > ( ) { } [ ]
+    const escapedText = text.replace(/[.,:;/\\`'"=*!?#$&+^|~<>(){}[\]]/g, ' ') // keep 日本語 safe instead of lazy latin limitation ;)
+    const query = `repo:facebook/react is:issue in:title in:body state:${state} ${escapedText}`
     getIssues({ variables: { query } })
 
     // Do not use preloaded content anymore.
