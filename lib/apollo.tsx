@@ -4,6 +4,7 @@ import { NextComponentType, NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import hoistNonReactStatics from 'hoist-non-react-statics'
 import { isSsr } from './ssr-detector'
+import { isProduction } from './env-detector'
 
 // API settings.
 const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT
@@ -22,6 +23,7 @@ const createApolloClient = (
     ssrMode: isSsr(),
     uri: apiEndpoint,
     cache: new InMemoryCache().restore(bffState || {}),
+    connectToDevTools: !isProduction(),
   })
 
 const initApolloClient = (

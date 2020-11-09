@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { withApollo } from '../../lib/apollo'
 
 const ISSUE_QUERY = gql`
-  {
+  query($number: Int!) {
     repository(name: "react", owner: "facebook") {
       id
       issue(number: $number) {
@@ -43,16 +43,14 @@ const IssuePage: React.FC = () => {
   const {
     query: { issueId },
   } = useRouter()
-  const { data, loading } = useQuery(ISSUE_QUERY, { variables: { number: issueId } })
+  const number = issueId && +issueId
+  const { data, loading } = useQuery(ISSUE_QUERY, { variables: { number } })
 
   if (loading) return null
 
-  const {
-    author: { login },
-    body,
-    title,
-    comments: commentsData,
-  } = data?.repository?.issue
+  // tdb @nrei unsafe. No error handling in a case if issue was not found.
+  const { author: { login = '' } = {}, body, title, comments: commentsData } =
+    data?.repository?.issue || {}
   const comments: Comment[] = commentsData?.nodes || []
 
   return (
