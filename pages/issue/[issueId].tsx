@@ -1,6 +1,6 @@
 import { gql, useQuery } from '@apollo/client'
 import { useRouter } from 'next/router'
-import { Button, Container, Header } from 'semantic-ui-react'
+import { Container, Header } from 'semantic-ui-react'
 import { withApollo } from '../../lib/apollo'
 import styles from './[issueId].module.scss'
 
