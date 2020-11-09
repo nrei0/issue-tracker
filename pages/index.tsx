@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react'
 import { gql, useLazyQuery, useQuery } from '@apollo/client'
-import Link from 'next/link'
-import { SearchBar, IssueState } from '../components/search-bar'
+import { SearchBar } from '../components/search-bar'
+import { IssueList, IssueListItemProps } from '../components/issue-list'
 import { withApollo } from '../lib/apollo'
-import { Button } from 'semantic-ui-react'
+import { IssueState } from '../lib/common-types'
+import { Button, Container, Header } from 'semantic-ui-react'
+import styles from './index.module.scss'
 
 const SEARCH_QUERY = gql`
   query($query: String!, $after: String, $limit: Int!) {
@@ -26,11 +28,8 @@ const SEARCH_QUERY = gql`
 
 const limit = 25
 
-type Issue = {
+type Issue = IssueListItemProps & {
   id: string
-  number: string
-  title: string
-  state: string
 }
 
 const MainPage: React.FC = () => {
@@ -82,21 +81,17 @@ const MainPage: React.FC = () => {
   }
 
   return (
-    <div>
+    <Container text className={styles.page}>
+      <Header as="h1">React issue tracker</Header>
+      <p>Type your issue and choose between open / closed states.</p>
       <SearchBar onSearch={onSearchChange} loading={loading} />
-      {displayIssues.map(({ number, state, title }) => (
-        <Link key={number} href={`/issue/${number}`}>
-          <p>
-            {number} : {state} : {title}
-          </p>
-        </Link>
-      ))}
+      <IssueList className={styles['issue-list']} issues={displayIssues} />
       {hasNextPage && (
-        <Button loading={loading} onClick={onFetchMoreClick}>
+        <Button primary loading={loading} onClick={onFetchMoreClick}>
           Fetch more
         </Button>
       )}
-    </div>
+    </Container>
   )
 }
 

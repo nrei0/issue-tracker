@@ -1,6 +1,8 @@
 import { gql, useQuery } from '@apollo/client'
 import { useRouter } from 'next/router'
+import { Button, Container, Header } from 'semantic-ui-react'
 import { withApollo } from '../../lib/apollo'
+import styles from './[issueId].module.scss'
 
 const ISSUE_QUERY = gql`
   query($number: Int!) {
@@ -54,9 +56,9 @@ const IssuePage: React.FC = () => {
   const comments: Comment[] = commentsData?.nodes || []
 
   return (
-    <div>
-      <h1>{title}</h1>
-      <h3>{login}</h3>
+    <Container text className={styles.page}>
+      <Header as="h1">{title}</Header>
+      <Header as="h3">{login}</Header>
       <p>{body}</p>
       <div>
         {comments.map(({ author: { login }, body, id }) => (
@@ -66,7 +68,7 @@ const IssuePage: React.FC = () => {
           </div>
         ))}
       </div>
-    </div>
+    </Container>
   )
 }
 

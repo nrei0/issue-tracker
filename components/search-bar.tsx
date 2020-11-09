@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import debounce from 'lodash.debounce'
 import { Form } from 'semantic-ui-react'
-
-export type IssueState = 'closed' | 'open'
+import { IssueState } from '../lib/common-types'
 
 type DropdownItemOptions = {
   key: string
@@ -57,21 +56,20 @@ export const SearchBar: React.FC<SearchBarProps> = (props) => {
 
   return (
     <Form onSubmit={submitForm}>
-      <Form.Group>
+      <Form.Group unstackable>
         <Form.Input
+          width={8}
           loading={loading}
-          width={3}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Search..."
+          placeholder="Search"
         />
         <Form.Select
-          width={1}
+          fluid
           value={issueState}
           onChange={(_, { value }) =>
             setIssueState(value as IssueState /* IssueState === string */)
           }
-          placeholder="State"
           options={options}
         />
       </Form.Group>
