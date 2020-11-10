@@ -26,58 +26,81 @@ const SEARCH_QUERY = gql`
   }
 `
 
-const limit = 25
-
 type Issue = IssueListItemProps & {
   id: string
 }
+
+type SearchQueryResult = {
+  search?: {
+    pageInfo?: {
+      hasNextPage: boolean
+      endCursor: string
+    }
+    nodes?: Issue[]
+  }
+}
+
+// Number of issues per query call.
+const limit = 25
+
+const getSearchQuery = (text: string, state: string): string =>
+  `repo:facebook/react is:issue in:title in:body state:${state} ${text}`
 
 const MainPage: React.FC = () => {
   const stateRef = useRef('open')
   const textRef = useRef('')
   const [displayIssues, setDisplayIssues] = useState<Issue[]>([])
-  const { data: preloadedData } = useQuery(SEARCH_QUERY, {
+
+  const onCompleted = (data: SearchQueryResult): void => {
+    const issues = data?.search?.nodes || []
+    setDisplayIssues([...displayIssues, ...issues])
+  }
+
+  // BFF preloaded search query (used to fetch last known issues).
+  const { data: preloadedData } = useQuery<SearchQueryResult>(SEARCH_QUERY, {
     variables: {
-      query: `repo:facebook/react is:issue in:title in:body state:open`,
+      query: getSearchQuery('', 'open'),
       limit,
     },
-    onCompleted: (data) => {
-      const issues: Issue[] = data?.search?.nodes || []
-      setDisplayIssues([...displayIssues, ...issues])
-    },
+    onCompleted,
   })
+
+  // Lazy search query.
   const [getIssues, { data: loadedData, loading, called }] = useLazyQuery(SEARCH_QUERY, {
     fetchPolicy: 'cache-and-network',
-    onCompleted: (data) => {
-      const issues: Issue[] = data?.search?.nodes || []
-      setDisplayIssues([...displayIssues, ...issues])
-    },
+    onCompleted,
   })
 
+  // Use initial or search lazy loaded data.
   const data = called ? loadedData : preloadedData
+
+  // Pagination.
   const { hasNextPage = false, endCursor } = data?.search?.pageInfo || {}
 
+  // `onSearchChange` triggers always when `state` or `text` of search bar changes.
   const onSearchChange = (text: string, state: IssueState): void => {
-    // Start search from scratch.
+    // Start new search round.
     setDisplayIssues([])
 
     // Escape characters.
     // https://docs.github.com/en/free-pro-team@latest/github/searching-for-information-on-github/searching-code#considerations-for-code-search
     // . , : ; / \ ` ' " = * ! ? # $ & + ^ | ~ < > ( ) { } [ ]
     const escapedText = text.replace(/[.,:;/\\`'"=*!?#$&+^|~<>(){}[\]]/g, ' ') // keep 日本語 safe instead of lazy latin limitation ;)
-    const query = `repo:facebook/react is:issue in:title in:body state:${state} ${escapedText}`
-    getIssues({ variables: { query, limit, after: endCursor } })
+    getIssues({ variables: { query: getSearchQuery(escapedText, state), limit, after: endCursor } })
 
-    // Keep text and state for further usage.
+    // Keep text and state for further usage in pagination (fetch more button).
     textRef.current = escapedText
     stateRef.current = state
   }
 
   const onFetchMoreClick = (): void => {
-    if (hasNextPage) {
-      const query = `repo:facebook/react is:issue in:title in:body state:${stateRef.current} ${textRef.current}`
-      getIssues({ variables: { query, limit, after: endCursor } })
-    }
+    getIssues({
+      variables: {
+        query: getSearchQuery(textRef.current, stateRef.current),
+        limit,
+        after: endCursor,
+      },
+    })
   }
 
   return (

@@ -14,15 +14,12 @@ const ISSUE_QUERY = gql`
         body
         number
         author {
-          avatarUrl
           login
         }
         comments(first: 10) {
-          totalCount
           nodes {
             id
             author {
-              avatarUrl
               login
             }
             body
@@ -41,12 +38,32 @@ type Comment = {
   id: string
 }
 
+type IssueDetails = {
+  id: string
+  title: string
+  body: string
+  number: string
+  author: {
+    login: string
+  }
+  comments: {
+    nodes: Comment[]
+  }
+}
+
+type IssueQueryResult = {
+  repository?: {
+    id: string
+    issue: IssueDetails
+  }
+}
+
 const IssuePage: React.FC = () => {
   const {
     query: { issueId },
   } = useRouter()
   const number = issueId && +issueId
-  const { data, loading } = useQuery(ISSUE_QUERY, { variables: { number } })
+  const { data, loading } = useQuery<IssueQueryResult>(ISSUE_QUERY, { variables: { number } })
 
   if (loading) return null
 
@@ -63,8 +80,11 @@ const IssuePage: React.FC = () => {
       <div>
         {comments.map(({ author: { login }, body, id }) => (
           <div key={id}>
-            <h3>{login}</h3>
-            <p>{body} </p>
+            <br />
+            <p>
+              <Header as="h3">{login}</Header>
+              {body}
+            </p>
           </div>
         ))}
       </div>
